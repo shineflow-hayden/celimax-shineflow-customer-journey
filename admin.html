@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="referrer" content="same-origin">
+  <title>관리자 | celimax x shineflow</title>
+  <link rel="stylesheet" href="/assets/celimax-admin.css">
+  <script src="/assets/celimax-activity.js" defer></script>
+  <script src="/assets/celimax-admin.js" defer></script>
+</head>
+<body>
+<header class="admin-header">
+  <a class="wordmark" href="/index.html">celimax <span>× SHINEFLOW</span></a>
+  <div class="header-actions"><a href="/index.html">고객여정으로</a><button id="admin-sign-out" type="button" hidden>로그아웃</button></div>
+</header>
+<main>
+  <section id="admin-login" class="login-panel" aria-labelledby="login-title">
+    <p class="eyebrow">ADMIN ACCESS</p>
+    <h1 id="login-title">관리자 로그인</h1>
+    <p>관리자 비밀번호를 입력해주세요.</p>
+    <form id="admin-login-form">
+      <label for="admin-password">비밀번호</label>
+      <input id="admin-password" type="password" autocomplete="current-password" maxlength="254" required aria-describedby="admin-login-error">
+      <button class="primary" type="submit">로그인</button>
+      <p id="admin-login-error" class="error" role="status" aria-live="polite"></p>
+    </form>
+  </section>
+  <section id="admin-dashboard" hidden aria-labelledby="dashboard-title">
+    <div class="page-intro"><div><p class="eyebrow">CUSTOMER JOURNEY / ADMIN</p><h1 id="dashboard-title">접속, 변경 기록</h1><p>고객여정 페이지 접속 내역과 트래커에 저장된 변경 내용을 확인합니다.</p></div><span class="timezone">한국 시간 KST</span></div>
+    <p class="record-note">접속자와 수정자는 로그인할 때 입력한 이메일을 기준으로 표시합니다. 이메일 소유자를 인증하는 방식은 아니며, 기록은 기능 적용 이후부터 저장됩니다.</p>
+    <div class="tabs" role="tablist" aria-label="기록 종류">
+      <button id="access-tab" type="button" role="tab" aria-selected="true" aria-controls="admin-records" data-record-type="access">접속 기록</button>
+      <button id="audit-tab" type="button" role="tab" aria-selected="false" aria-controls="admin-records" tabindex="-1" data-record-type="audit">트래커 변경 기록</button>
+    </div>
+    <form id="admin-filters" class="filters">
+      <label>마켓<select id="filter-market"><option value="">전체</option><option value="US">US</option><option value="JP">JP</option></select></label>
+      <label>시작일<input id="filter-start" type="date"></label>
+      <label>종료일<input id="filter-end" type="date"></label>
+      <label class="search-filter">이메일, 제품 검색<input id="filter-query" type="search" maxlength="80" placeholder="이메일 또는 제품명"></label>
+      <div class="filter-buttons"><button class="primary" type="submit">조회</button><button id="filter-reset" type="button">초기화</button></div>
+    </form>
+    <section id="admin-records" class="records" role="tabpanel" aria-labelledby="access-tab">
+      <div class="records-heading"><h2 id="records-title">접속 기록</h2><button id="records-refresh" type="button">새로고침</button></div>
+      <p id="records-status" role="status" aria-live="polite">기록을 불러오는 중입니다.</p>
+      <p id="records-error" class="error" role="alert" hidden></p>
+      <div class="table-scroll"><table id="records-table"><caption class="sr-only">접속, 트래커 변경 기록</caption><thead id="records-head"></thead><tbody id="records-body"></tbody></table></div>
+      <p id="records-empty" class="empty" hidden>아직 저장된 기록이 없습니다.</p>
+      <div class="pagination"><button id="records-prev" type="button" disabled>이전</button><span id="records-page">1 페이지</span><button id="records-next" type="button" disabled>다음</button></div>
+    </section>
+  </section>
+</main>
+<footer>celimax x shineflow / 관리자 전용</footer>
+</body>
+</html>

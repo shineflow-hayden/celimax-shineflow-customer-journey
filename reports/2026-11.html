@@ -790,7 +790,8 @@ Retinal Booster 또는 Retinol Serum 전 보습 루틴 디자인안 검토, 밀�
 </main>
 <footer class="site-footer"><div class="container site-footer-inner"><span>Confidential</span><span>Powered by Shineflow</span><a href="mailto:hayden@shineflowseattle.com">문의처 : hayden@shineflowseattle.com</a></div></footer>
 <div class="toast" id="toast" role="status" aria-live="polite"></div><dialog id="copy-dialog" aria-labelledby="copy-dialog-title"><h2 id="copy-dialog-title">문구 복사</h2><p>선택된 문구를 Ctrl+C 또는 ⌘C로 복사해 주세요.</p><textarea id="manual-copy" readonly="" aria-label="복사할 영문 문구"></textarea><button type="button" id="close-copy">닫기</button></dialog>
-</div><script id="celimax-email-access">
+</div><script src="/assets/celimax-activity.js"></script>
+<script id="celimax-email-access">
 (() => {
   'use strict';
   // Exact email allowlist. Store digests so the page source does not list email addresses.
@@ -865,7 +866,7 @@ Retinal Booster 또는 Retinol Serum 전 보습 루틴 디자인안 검토, 밀�
     return allowedEmailHashes.has(hash) ? email : null;
   }
 
-  function unlock(email) {
+  function unlock(email, accessEvent = 'login') {
     if (granted || !email) return;
     granted = true;
     try { sessionStorage.setItem(storageKey, email); } catch (_) {}
@@ -877,6 +878,7 @@ Retinal Booster 또는 Retinol Serum 전 보습 루틴 디자인안 검토, 밀�
     app.hidden = false;
     app.removeAttribute('inert');
     signOut.hidden = false;
+    window.celimaxRecordAccess?.(email, accessEvent);
     resolveAccess();
     window.requestAnimationFrame(() => {
       const heading = app.querySelector('[data-page]:not([hidden]) h1');
@@ -901,15 +903,23 @@ Retinal Booster 또는 Retinol Serum 전 보습 루틴 디자인안 검토, 밀�
     const attempt = ++accessAttempt;
     const value = input.value;
     try {
+      if (value.trim() && !value.includes('@')) {
+        if (!window.celimaxAdminLogin) throw new Error('관리자 기능 파일을 확인해주세요.');
+        await window.celimaxAdminLogin(value.trim());
+        if (attempt !== accessAttempt || granted) return;
+        input.value = '';
+        window.location.assign('/admin.html');
+        return;
+      }
       const email = await allowedEmailAddress(value);
       if (attempt !== accessAttempt || granted) return;
       if (email) { unlock(email); return; }
       input.setAttribute('aria-invalid', 'true');
       error.textContent = value.trim() ? '접속이 허용된 이메일 주소를 입력해주세요.' : '이메일 주소를 입력해주세요.';
       input.focus();
-    } catch (_) {
+    } catch (loginError) {
       if (attempt !== accessAttempt || granted) return;
-      error.textContent = '이메일을 확인하지 못했습니다. 페이지를 새로고침한 후 다시 시도해주세요.';
+      error.textContent = loginError.message || '로그인 정보를 확인하지 못했습니다. 다시 시도해주세요.';
       input.focus();
     }
   });
@@ -919,6 +929,7 @@ Retinal Booster 또는 Retinol Serum 전 보습 루틴 디자인안 검토, 밀�
     error.textContent = '';
   });
   signOut.addEventListener('click', () => {
+    window.celimaxClearAccessContext?.();
     try {
       sessionStorage.removeItem(storageKey);
       sessionStorage.removeItem(legacyStorageKey);
@@ -934,7 +945,7 @@ Retinal Booster 또는 Retinol Serum 전 보습 루틴 디자인안 검토, 밀�
     const attempt = accessAttempt;
     allowedEmailAddress(remembered).then(email => {
       if (attempt !== accessAttempt || granted) return;
-      if (email) { unlock(email); return; }
+      if (email) { unlock(email, 'visit'); return; }
       try { sessionStorage.removeItem(storageKey); } catch (_) {}
     }).catch(() => {
       try { sessionStorage.removeItem(storageKey); } catch (_) {}
@@ -1269,7 +1280,7 @@ function createCelimaxSharedStore(options) {
     try {
       const response = await (options.fetch || fetch)(target + '?' + query, {
         method, credentials:'omit', cache:'no-store', signal:controller.signal,
-        headers:{apikey:config.publishableKey, Accept:'application/json', ...(patch ? {'Content-Type':'application/json', Prefer:'return=representation'} : {})},
+        headers:{apikey:config.publishableKey, Accept:'application/json', ...(patch ? {'Content-Type':'application/json', Prefer:'return=representation', ...(typeof globalThis.celimaxAuditHeaders === 'function' ? globalThis.celimaxAuditHeaders() : {})} : {})},
         ...(patch ? {body:JSON.stringify(patch)} : {})
       });
       const text = await response.text();
