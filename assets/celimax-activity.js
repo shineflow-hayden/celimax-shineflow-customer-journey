@@ -11,14 +11,24 @@
     if (!/^https?:$/.test(window.location.protocol)) throw new Error('웹사이트에서 이용해주세요.');
     let response;
     try {
-      response = await fetch(API + '?op=' + op, { method: 'POST', credentials: 'same-origin', cache: 'no-store', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), signal: AbortSignal.timeout(10000) });
+      response = await fetch(API + '?op=' + op, { method: body === undefined ? 'GET' : 'POST', credentials: 'same-origin', cache: 'no-store', ...(body === undefined ? {} : { headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }), signal: AbortSignal.timeout(10000) });
     } catch { throw new Error('서버에 연결하지 못했습니다. 잠시 후 다시 시도해주세요.'); }
     let data;
     try { data = await response.json(); } catch { throw new Error('관리자 기능 설정이 필요합니다. 관리자_적용방법.txt를 확인해주세요.'); }
     if (!response.ok) throw new Error(data.error || '요청을 처리하지 못했습니다.');
     return data;
   }
-  window.celimaxAdminLogin = password => api('login', { password });
+  window.celimaxAdminLogin = async password => {
+    await api('login', { password });
+    // A report opened as admin must not inherit a customer's audit identity.
+    try { sessionStorage.removeItem('celimax-email-access-v2'); } catch (_) {}
+    window.celimaxClearAccessContext?.();
+  };
+  window.celimaxHasAdminSession = async () => {
+    if (!/^https?:$/.test(location.protocol)) return false;
+    try { return (await api('session')).ok === true; } catch { return false; }
+  };
+  window.celimaxAdminLogout = () => api('logout', {});
   window.celimaxRecordAccess = (email, eventType) => {
     let session;
     try { session = sessionStorage.getItem(SESSION_KEY); } catch (_) {}

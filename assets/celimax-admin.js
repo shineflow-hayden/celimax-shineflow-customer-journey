@@ -6,6 +6,23 @@
   const timeFormat = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
   let type = 'access', cursor = null, nextCursor = null, previous = [], loading = false, requestId = 0;
   let filter = {};
+  // Only site report paths may be used as return destinations.
+  const reportPath = new URLSearchParams(location.search).get('report');
+  if (reportPath) {
+    try {
+      const url = new URL(reportPath, location.origin);
+      const isReport = ['/', '/index.html'].includes(url.pathname) || /^\/reports\/(?:jp\/)?\d{4}-(?:0[1-9]|1[0-2])\.html$/.test(url.pathname);
+      if (url.origin === location.origin && isReport) $('admin-report-switch').href = url.pathname + url.hash;
+    } catch { /* Keep the default US report. */ }
+  }
+  window.addEventListener('pageshow', event => {
+    if (event.persisted) location.reload();
+  });
+  document.addEventListener('visibilitychange', async () => {
+    if (!document.hidden && !$('admin-dashboard').hidden && !(await window.celimaxHasAdminSession())) {
+      showLogin('관리자 세션을 다시 확인해주세요.');
+    }
+  });
   function node(tag, text, className) {
     const el = document.createElement(tag);
     if (text !== undefined) el.textContent = text;
